@@ -1,0 +1,6 @@
+nltk 
+scikit-learn
+numpy
+pymorphy2
+flask
+requests
