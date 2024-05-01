@@ -4,3 +4,4 @@ numpy
 pymorphy2
 flask
 requests
+ffmpeg-python

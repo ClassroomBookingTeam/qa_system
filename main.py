@@ -7,10 +7,11 @@ from sklearn.metrics.pairwise import cosine_similarity
 from flask import Flask, abort, redirect, request, jsonify, send_file
 import requests
 from tempfile import NamedTemporaryFile
+import ffmpeg
 
 
-RH_VOICE_ENDPOINT = "http://localhost:8000"
-TRANSCRIBITION_ENDPOINT = "http://localhost:4010"
+RH_VOICE_ENDPOINT = "http://localhost:8080"
+TRANSCRIBITION_ENDPOINT = "http://localhost:8002"
 
 db = json.load(open("db.json"))
 nltk.download("stopwords")
@@ -37,7 +38,6 @@ def ask_question(query):
     similarity = cosine_similarity(query_vec, tfidf_matrix)
     max_index = similarity.argmax()
     return db[max_index]["answer"]
-
 
 
 app = Flask(__name__)
@@ -96,14 +96,15 @@ def qa_voice():
     print("Question", question)
     answer = ask_question(question)
     print("Answer", answer)
-    voice_url = f"{RH_VOICE_ENDPOINT}/say?text={answer.replace(' ', '%20')}&voice=yuriy&format=mp3"
+    voice_url = f"{RH_VOICE_ENDPOINT}/say?text={answer.replace(' ', '%20')}&voice=yuriy&format=wav"
     voice_response = requests.get(voice_url)
     if voice_response.status_code != 200:
         return jsonify({"error": "Failed to generate voice response"}), 500
 
-    temp = NamedTemporaryFile(delete=False, suffix=".mp3")
+    temp = NamedTemporaryFile(delete=False, suffix=".wav")
     temp.write(voice_response.content)
     temp.close()
+    (ffmpeg.input(temp.name).output(temp.name, ar="8000").run())
 
     return send_file(temp.name, as_attachment=True, download_name="response.mp3")
 
