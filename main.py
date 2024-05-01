@@ -104,9 +104,13 @@ def qa_voice():
     temp = NamedTemporaryFile(delete=False, suffix=".wav")
     temp.write(voice_response.content)
     temp.close()
-    (ffmpeg.input(temp.name).output(temp.name, ar="8000").run())
 
-    return send_file(temp.name, as_attachment=True, download_name="response.mp3")
+    temp2 = NamedTemporaryFile(delete=False, suffix=".wav")
+    temp2.close()
+
+    (ffmpeg.input(temp.name).output(temp2.name, ar="8000").run(overwrite_output=True))
+
+    return send_file(temp2.name, as_attachment=True, download_name="response.mp3")
 
 
 if __name__ == "__main__":
